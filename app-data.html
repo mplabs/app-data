@@ -1,0 +1,71 @@
+<link rel="import" href="../polymer/polymer.html">
+
+<script>
+(function(context) {
+  "use strict";
+
+  var key, instances = [];
+  var vars = Object.create(Polymer.Base);
+
+  Polymer({
+
+    is: 'app-data',
+
+    _template: null,
+
+    properties: {
+      data: {
+        type: Object,
+        notify: true,
+        observer: '_dataChanged'
+      },
+
+      key: String
+    },
+
+    created: function() {
+      key = this.getAttribute('key');
+      if (!key) {
+        throw new Error("`<app-data>` requires a key attribute");
+      }
+
+      instances.push({ key: key, instance: this });
+    },
+
+    ready: function() {
+      var i = instances.find(i => i.key == key);
+      if (i && i.instance !== this) {
+        this.set('data', i.instance.data);
+      }
+    },
+
+    detached: function() {
+      key = this.getAttribute('key');
+      var i = instances.indexOf({ key: key, instance: this });
+      if (i >= 0) {
+        instances.splice(i, 1);
+      }
+    },
+
+    _dataChanged: function(newValue, oldValue) {
+      var i;
+
+      key = this.getAttribute('key');
+      if (!key) {
+        throw new Error("`<app-data>` requires a key attribute");
+      }
+
+      vars.set(key, newValue);
+
+      // Notify the instances with the correct key
+      instances.forEach(function(i) {
+        if (i.key === key) {
+          i.instance.notifyPath('data', newValue);
+        }
+      });
+
+    }
+
+  });
+})(this);
+</script>
